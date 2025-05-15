@@ -1,24 +1,25 @@
 package com.kyn.neo4j;
 
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Relationship;
-
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 @Node
 public class Person {
 
-  @Id @GeneratedValue private Long id;
+  @Id @GeneratedValue private UUID id;
 
   private String name;
 
-  private Person() {}
+  public Person() {}
 
   public Person(String name) {
     this.name = name;
@@ -34,6 +35,7 @@ public class Person {
     teammates.add(person);
   }
 
+  @Override
   public String toString() {
 
     return this.name + "'s teammates => "

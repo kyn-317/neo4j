@@ -32,7 +32,7 @@ public class PersonService {
         return personRepository.findAll();
     }
 
-    public Mono<Person> teammate(Person person, Person person2) {
+    public Mono<Person> setTeammate(Person person, Person person2) {
         return this.findByName(person.getName())
             .flatMap(p -> 
             this.findByName(person2.getName()).map(p2 -> {
