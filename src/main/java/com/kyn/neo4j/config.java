@@ -5,6 +5,9 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.kyn.neo4j.product.Person;
+import com.kyn.neo4j.product.PersonService;
+
 import reactor.core.publisher.Flux;
 
 @Configuration

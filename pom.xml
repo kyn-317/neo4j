@@ -45,8 +45,12 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+		    <groupId>org.neo4j</groupId>
+    		<artifactId>neo4j-ogm-core</artifactId>
+    		<version>4.0.17</version>
+		</dependency>
 	</dependencies>
-
 	<build>
 		<plugins>
 			<plugin>
