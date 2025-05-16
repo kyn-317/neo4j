@@ -1,4 +1,4 @@
-package com.kyn.neo4j.product;
+package com.kyn.neo4j.person;
 
 import java.util.UUID;
 

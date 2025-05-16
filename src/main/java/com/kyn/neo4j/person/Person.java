@@ -1,21 +1,21 @@
-package com.kyn.neo4j.product;
+package com.kyn.neo4j.person;
 
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-@Node
+import lombok.Data;
+
+@Node("Person")
+@Data
 public class Person {
 
-  @Id @GeneratedValue private UUID id;
+  @Id @GeneratedValue private UUID elementId;
 
   private String name;
 
@@ -35,21 +35,4 @@ public class Person {
     teammates.add(person);
   }
 
-  @Override
-  public String toString() {
-
-    return this.name + "'s teammates => "
-      + Optional.ofNullable(this.teammates).orElse(
-          Collections.emptySet()).stream()
-            .map(Person::getName)
-            .collect(Collectors.toList());
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
 }

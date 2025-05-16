@@ -1,4 +1,4 @@
-package com.kyn.neo4j.product;
+package com.kyn.neo4j.person;
 
 import org.springframework.stereotype.Service;
 
@@ -14,6 +14,9 @@ public class PersonService {
         this.personRepository = personRepository;
     }
     
+    public Mono<Void> deleteAll() {
+        return personRepository.deleteAll();
+    }
     
 
     public Mono<Person> findByName(String name) {

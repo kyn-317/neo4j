@@ -1,4 +1,4 @@
-package com.kyn.neo4j.product;
+package com.kyn.neo4j.person;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
