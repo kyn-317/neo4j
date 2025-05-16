@@ -41,5 +41,8 @@ public class Product {
     @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
     private Category mostSpecificCategory; 
 
+    @Property("categoryString")
+    private String categoryString;
+
     public Product() {}
 }
