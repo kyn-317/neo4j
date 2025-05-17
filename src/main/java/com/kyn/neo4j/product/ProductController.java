@@ -21,10 +21,10 @@ public class ProductController {
         this.productInsertService = productInsertService;
     }
 
-    @PostMapping
+ /*    @PostMapping
     public Mono<Product> postMethodName(@RequestBody ProductData entity) {
         return productInsertService.createProduct(entity);
         
-    }
+    } */
     
 }

@@ -49,40 +49,46 @@ public class config {
 	} */
 
 	@Bean
-	CommandLineRunner command(ProductInsertService productInsertService){
+	CommandLineRunner command(ProductInsertService productInsertService) {
 		return args -> {
-            productInsertService.deleteAllProducts()
-			.then(loadProductData())
-            .subscribe();
+			productInsertService.deleteAllProducts()
+				.then(createCategoryTree(productInsertService))
+				.then(productInsertService.createCategoryHierarchy())
+				.subscribe(
+					null,
+					error -> log.error("Error during category import: {}", error.getMessage()),
+					() -> log.info("Category import completed successfully")
+				);
 		};
 	}
 
-	private Mono<Integer> loadProductData() {
-        log.info("load products from product.jsonl");
-        
-        try {
-            ClassPathResource resource = new ClassPathResource("product.jsonl");
-            Path filePath = Path.of(resource.getURI());
-            
-            return Flux.fromStream(Files.lines(filePath))
-                .map(this::convertLineToProduct)
-                .filter(product -> product != null)
-                .concatMap(productInsertService::createProduct)
-                .count()
-                .map(Long::intValue)
-                .doFinally(signalType -> {
-                    try {
-                        Files.lines(filePath).close();
-                    } catch (Exception e) {
-                        log.error("Failed to close file stream", e);
-                    }
-                });
-                
-        } catch (Exception e) {
-            log.error("error: {}", e.getMessage());
-            return Mono.just(0);
-        }
-    }
+	private Mono<Void> createCategoryTree(ProductInsertService productInsertService) {
+		log.info("Creating category tree structure");
+		
+		try {
+			ClassPathResource resource = new ClassPathResource("product.jsonl");
+			Path filePath = Path.of(resource.getURI());
+			
+			return Flux.fromStream(Files.lines(filePath))
+				.map(this::convertLineToProduct)
+				.filter(product -> product != null)
+				.concatMap(product -> 
+					productInsertService.createTreePath(product.getCategoryString())
+				)
+				.then()
+				.doFinally(signalType -> {
+					try {
+						Files.lines(filePath).close();
+					} catch (Exception e) {
+						log.error("Failed to close file stream", e);
+					}
+				});
+				
+		} catch (Exception e) {
+			log.error("Error creating category tree: {}", e.getMessage());
+			return Mono.error(e);
+		}
+	}
     
     /**
      * convert one line of JSONL file to ProductBasEntity

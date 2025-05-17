@@ -1,94 +1,89 @@
 package com.kyn.neo4j.service;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
 import com.kyn.neo4j.category.Category;
+import com.kyn.neo4j.category.CategoryNode;
 import com.kyn.neo4j.category.CategoryRepository;
-import com.kyn.neo4j.product.Product;
-import com.kyn.neo4j.product.ProductData;
-import com.kyn.neo4j.product.ProductMapper;
-import com.kyn.neo4j.product.ProductRepository;
+import com.kyn.neo4j.category.MasterNode;
 
-import jakarta.transaction.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import lombok.extern.slf4j.Slf4j;
 
-
+@Slf4j
 @Service
 public class ProductInsertService {
-    private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final MasterNode masterNode;
 
-    public ProductInsertService(ProductRepository productRepository, CategoryRepository categoryRepository) {
-        this.productRepository = productRepository;
+    public ProductInsertService(CategoryRepository categoryRepository) {
         this.categoryRepository = categoryRepository;
+        this.masterNode = new MasterNode();
     }
 
-
-    @Transactional
-    public void importProduct(ProductData productData){
+    public MasterNode getMasterNode() {
+        return masterNode;
     }
-    
-    public Mono<Void> deleteAllProducts(){
-        return productRepository.deleteAll()
-        .then(categoryRepository.deleteAll());
+    public Mono<Void> deleteAllProducts() {
+        return categoryRepository.deleteAll();
     }
 
-    private Mono<Category> getOrCreateCategory(String categoryName){
-        return categoryRepository.findByName(categoryName)
-        .switchIfEmpty(categoryRepository.save(Category.builder().name(categoryName).build()))
-        .flatMap(category -> Mono.just(category));
-    }
-    public Mono<Product> createProduct(ProductData productData){
-        return createCategoryHierarchy(productData.getCategoryString())
-        .flatMap(category -> {
-            Product product = ProductMapper.mapToProduct(productData, category);
-            return productRepository.save(product);
-        });
+    // Create tree structure in MasterNode
+    public Mono<Void> createTreePath(String categoryString) {
+        try {
+            masterNode.addCategoryPath(categoryString);
+            return Mono.empty();
+        } catch (Exception e) {
+            log.error("Error creating tree path for category: {}", categoryString, e);
+            return Mono.error(e);
+        }
     }
 
-    private Mono<Category> createCategoryHierarchy(String categoryName){
-        List<String> categoryNames = Arrays.asList(categoryName.split("\\|"));
+    // Create category hierarchy in database from MasterNode
+    public Mono<Void> createCategoryHierarchy() {
+        log.info("Creating category hierarchy from MasterNode");
+        log.info("MasterNode structure:\n{}", masterNode.toString());
+        
+        return Flux.fromIterable(masterNode.getChildren().entrySet())
+            .flatMap(entry -> {
+                String rootCategory = entry.getKey();
+                log.info("Processing root category: {}", rootCategory);
+                return createCategoryNode(entry.getValue(), null);
+            })
+            .then();
+    }
 
-        if (categoryNames.isEmpty()) {
+    private Mono<Category> createCategoryNode(CategoryNode node, Category parentCategory) {
+        if (node == null || node.getName() == null) {
+            log.warn("Invalid category node encountered");
             return Mono.empty();
         }
 
-        return Flux.fromIterable(categoryNames)
-            .map(String::trim)
-            .collectList()
-            .flatMap(names -> {
-                // start from most specific category
-                int lastIndex = names.size() - 1;
-                String deepestCategoryName = names.get(lastIndex);
-                
-                // create the deepest category
-                return getOrCreateCategory(deepestCategoryName)
-                    .flatMap(deepestCategory -> {
-                        // connect the remaining categories one by one
-                        Mono<Category> currentCategoryMono = Mono.just(deepestCategory);
-                        
-                        // traverse from lastIndex-1 to 0
-                        for (int i = lastIndex - 1; i >= 0; i--) {
-                            final int currentIdx = i;
-                            currentCategoryMono = currentCategoryMono.flatMap(childCategory -> 
-                                 getOrCreateCategory(names.get(currentIdx))
-                                    .flatMap(parentCategory -> {
-                                        childCategory.setParentCategory(parentCategory);
-                                        return categoryRepository.save(childCategory)
-                                            .thenReturn(parentCategory);
-                                    })
-                            );
-                        }
-                        
-                        // return the deepest category
-                        return currentCategoryMono
-                            .then(categoryRepository.findByName(deepestCategoryName));
-                    });
-            });
+        return getOrCreateCategory(node.getName())
+            .flatMap(category -> {
+                if (parentCategory != null) {
+                    category.setParentCategory(parentCategory);
+                    return categoryRepository.save(category);
+                }
+                return Mono.just(category);
+            })
+            .flatMap(category -> 
+                Flux.fromIterable(node.getChildren().entrySet())
+                    .flatMap(childEntry -> createCategoryNode(childEntry.getValue(), category))
+                    .then(Mono.just(category))
+            );
+    }
+
+    private Mono<Category> getOrCreateCategory(String categoryName) {
+        return categoryRepository.findByName(categoryName)
+            .switchIfEmpty(
+                categoryRepository.save(Category.builder()
+                    .name(categoryName)
+                    .build())
+            );
     }
 }
 
