@@ -42,48 +42,56 @@ public class ProductInsertService {
         }
     }
 
-    // Create category hierarchy in database from MasterNode
-    public Mono<Void> createCategoryHierarchy() {
+    public Mono<String> createTreePathFromMasterNode(){
+        masterNode.traverse();
+        return Mono.just(masterNode.toStringNodeAndParent());
+    }
+
+
+
+    public Mono<Void> createCategoryHierarchyFromMasterNode() {
         log.info("Creating category hierarchy from MasterNode");
-        log.info("MasterNode structure:\n{}", masterNode.toString());
-        
+        // First create root category with null parent
         return Flux.fromIterable(masterNode.getChildren().entrySet())
-            .flatMap(entry -> {
-                String rootCategory = entry.getKey();
-                log.info("Processing root category: {}", rootCategory);
-                return createCategoryNode(entry.getValue(), null);
-            })
-            .then();
+                    // Use concatMap to process one category at a time
+                    .concatMap(entry -> {
+                        CategoryNode rootNode = entry.getValue();
+                        return justCreateCategory(rootNode.getName())
+                            .flatMap(category -> {
+                                return categoryRepository.save(category)
+                                    .flatMap(savedCategory -> 
+                                        createHiearchy(rootNode, savedCategory)
+                                    );
+                            });
+                    }, 5) // Process one category at a time
+                    .then();
     }
 
-    private Mono<Category> createCategoryNode(CategoryNode node, Category parentCategory) {
-        if (node == null || node.getName() == null) {
-            log.warn("Invalid category node encountered");
-            return Mono.empty();
-        }
+    private Mono<Category> createHiearchy(CategoryNode node, Category parentCategory) {
 
-        return getOrCreateCategory(node.getName())
-            .flatMap(category -> {
-                if (parentCategory != null) {
-                    category.setParentCategory(parentCategory);
-                    return categoryRepository.save(category);
-                }
-                return Mono.just(category);
-            })
-            .flatMap(category -> 
-                Flux.fromIterable(node.getChildren().entrySet())
-                    .flatMap(childEntry -> createCategoryNode(childEntry.getValue(), category))
-                    .then(Mono.just(category))
-            );
+        return Flux.fromIterable(node.getChildren().entrySet())
+            // Use concatMap to process one child at a time
+            .concatMap(childEntry -> {
+                CategoryNode childNode = childEntry.getValue();
+                Category childCategory = Category.builder()
+                .name(childNode.getName())
+                .parentCategory(parentCategory)
+                .build();
+                return categoryRepository.save(childCategory)
+                .flatMap(savedCategory -> 
+                    createHiearchy(childNode, savedCategory)
+                );
+
+            }, 5) // Process one child at a time
+            .then(Mono.just(parentCategory));
+    }
+    
+    private Mono<Category> justCreateCategory(String categoryName){
+        return categoryRepository.save(Category.builder()
+            .name(categoryName)
+            .build())
+            .doOnSuccess(cat -> log.info("Created new category: {}", cat.getName()));
     }
 
-    private Mono<Category> getOrCreateCategory(String categoryName) {
-        return categoryRepository.findByName(categoryName)
-            .switchIfEmpty(
-                categoryRepository.save(Category.builder()
-                    .name(categoryName)
-                    .build())
-            );
-    }
 }
 

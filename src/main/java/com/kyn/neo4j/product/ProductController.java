@@ -1,5 +1,6 @@
 package com.kyn.neo4j.product;
 
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,4 +28,13 @@ public class ProductController {
         
     } */
     
+    @GetMapping("/treePath")
+    public Mono<String> getTreePath(){
+        return productInsertService.createTreePathFromMasterNode();
+    }
+
+    @GetMapping("/categoryHierarchy")
+    public Mono<Void> getCategoryHierarchy(){
+        return productInsertService.createCategoryHierarchyFromMasterNode();
+    }
 }

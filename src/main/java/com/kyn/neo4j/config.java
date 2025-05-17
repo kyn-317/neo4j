@@ -51,19 +51,15 @@ public class config {
 	@Bean
 	CommandLineRunner command(ProductInsertService productInsertService) {
 		return args -> {
-			productInsertService.deleteAllProducts()
-				.then(createCategoryTree(productInsertService))
-				.then(productInsertService.createCategoryHierarchy())
-				.subscribe(
-					null,
-					error -> log.error("Error during category import: {}", error.getMessage()),
-					() -> log.info("Category import completed successfully")
-				);
+			log.info("Starting category import process");
+			productInsertService.deleteAllProducts().subscribe();
+			createCategoryTree(productInsertService).subscribe();
+            productInsertService.createCategoryHierarchyFromMasterNode().subscribe();
 		};
 	}
 
 	private Mono<Void> createCategoryTree(ProductInsertService productInsertService) {
-		log.info("Creating category tree structure");
+		log.info("Starting category tree creation from file");
 		
 		try {
 			ClassPathResource resource = new ClassPathResource("product.jsonl");
@@ -74,10 +70,12 @@ public class config {
 				.filter(product -> product != null)
 				.concatMap(product -> 
 					productInsertService.createTreePath(product.getCategoryString())
+						.doOnSuccess(v -> log.debug("Processed category path: {}", product.getCategoryString()))
 				)
 				.then()
 				.doFinally(signalType -> {
 					try {
+						log.info("Closing file stream");
 						Files.lines(filePath).close();
 					} catch (Exception e) {
 						log.error("Failed to close file stream", e);
@@ -131,7 +129,6 @@ public class config {
         if (jsonNode.has("Image")) {
             product.setImage(jsonNode.get("Image").asText());
         }
-		log.info("product: {}", product);
         return product;
     }
 }
