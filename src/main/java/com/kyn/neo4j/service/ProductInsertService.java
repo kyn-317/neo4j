@@ -2,6 +2,7 @@ package com.kyn.neo4j.service;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
@@ -130,31 +131,16 @@ public class ProductInsertService {
     }
 
     
-    public Mono<Product> insertProductsP(ProductData product){
-        return getCategoryByCategoryString(product.getCategoryString())
-            .doOnNext(cat -> log.info("Found category: {}", cat.getName()))
-            .flatMap(category -> {
-                // Create the product with the category relationship
-                Product newProduct = ProductMapper.mapToProduct(product, category);
-                
-                return productRepository.save(newProduct)
-                    // After saving, load the relationship
-                    .flatMap(savedProduct -> {
-                        log.info("Product saved with ID: {}", savedProduct.getId());
-                        return productRepository.findByIdWithCategory(savedProduct.getId())
-                            .doOnNext(loadedProduct -> {
-                                if (loadedProduct.getMostSpecificCategory() != null) {
-                                    log.info("Category relationship verified: {}", 
-                                            loadedProduct.getMostSpecificCategory().getName());
-                                } else {
-                                    log.warn("Category relationship missing for product: {}", 
-                                            loadedProduct.getName());
-                                }
-                            })
-                            .defaultIfEmpty(savedProduct);
-                    });
-            })
-            .doOnSuccess(prod -> log.info("Inserted product: {}", prod.getName()));
+    public Mono<ProductData> insertProductsP(ProductData product){
+        return categoryRepository.saveProductWithExactCategory(
+            UUID.randomUUID(),
+            product.getProductName(),
+            product.getDescription(),
+            product.getPrice(),
+            product.getSpecification(),
+            product.getImage(),
+            product.getCategoryString()
+        );
     }
 }
 

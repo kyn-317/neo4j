@@ -51,7 +51,8 @@ public class ProductController {
 
 
     @PostMapping("/insertProducts")
-    public Mono<Product> insertProducts(@RequestBody ProductData productData){
+    public Mono<ProductData> insertProducts(@RequestBody ProductData productData){
+        log.info("Inserting products: {}", productData);
         return productInsertService.insertProductsP(productData);
 
     }
