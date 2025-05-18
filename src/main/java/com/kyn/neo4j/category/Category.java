@@ -1,14 +1,16 @@
 package com.kyn.neo4j.category;
 
+import java.util.Set;
 import java.util.UUID;
 
 
-import org.neo4j.ogm.annotation.Property;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
+import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.schema.Relationship.Direction;
+
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,9 +31,6 @@ public class Category {
 
     @Relationship(type = "SUBCATEGORY", direction = Direction.INCOMING)
     private Category parentCategory;
-
-    @Relationship(type = "SUBCATEGORY", direction = Direction.OUTGOING)
-    private Category childCategory;
 
     public Category() {}
 }

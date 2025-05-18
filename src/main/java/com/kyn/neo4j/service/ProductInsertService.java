@@ -1,5 +1,6 @@
 package com.kyn.neo4j.service;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -8,7 +9,10 @@ import com.kyn.neo4j.category.Category;
 import com.kyn.neo4j.category.CategoryNode;
 import com.kyn.neo4j.category.CategoryRepository;
 import com.kyn.neo4j.category.MasterNode;
-
+import com.kyn.neo4j.product.Product;
+import com.kyn.neo4j.product.ProductData;
+import com.kyn.neo4j.product.ProductMapper;
+import com.kyn.neo4j.product.ProductRepository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import lombok.extern.slf4j.Slf4j;
@@ -16,19 +20,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class ProductInsertService {
+
+    private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final MasterNode masterNode;
 
-    public ProductInsertService(CategoryRepository categoryRepository) {
+    public ProductInsertService(CategoryRepository categoryRepository, ProductRepository productRepository) {
         this.categoryRepository = categoryRepository;
         this.masterNode = new MasterNode();
+        this.productRepository = productRepository;
     }
 
     public MasterNode getMasterNode() {
         return masterNode;
     }
     public Mono<Void> deleteAllProducts() {
-        return categoryRepository.deleteAll();
+        return categoryRepository.deleteAll()
+        .then(productRepository.deleteAll());
     }
 
     // Create tree structure in MasterNode
@@ -93,5 +101,60 @@ public class ProductInsertService {
             .doOnSuccess(cat -> log.info("Created new category: {}", cat.getName()));
     }
 
+    public Mono<Category> getCategoryByCategoryString(String categoryString) {           
+        log.info("Finding category by path string: {}", categoryString);
+        
+        // First try finding directly by path string
+        return categoryRepository.findCategoryByPathString(categoryString)
+            .doOnNext(cat -> log.info("Found category by path string: {}", cat.getName()))
+            .onErrorResume(e -> {
+                return categoryRepository.findCategoryByPath(Arrays.stream(categoryString.split("\\|"))
+                .map(String::trim)
+                .toArray(String[]::new))
+                .doOnNext(cat -> log.info("Found category by array path: {}", cat.getName()))
+                .onErrorResume(err -> {
+                    log.error("Error finding category by path: {}", err.getMessage());
+                    return Mono.empty();
+                });
+            });
+    }
+
+
+    public Mono<Void> insertProducts(ProductData product){
+        return getCategoryByCategoryString(product.getCategoryString())
+        .doOnNext(cat -> log.info("Found category: {}", cat.getName()))
+        .flatMap(category -> {
+            return productRepository.save(ProductMapper.mapToProduct(product, category));
+        }).doOnSuccess(prod -> log.info("Inserted product: {}", prod.getName()))
+        .then();
+    }
+
+    
+    public Mono<Product> insertProductsP(ProductData product){
+        return getCategoryByCategoryString(product.getCategoryString())
+            .doOnNext(cat -> log.info("Found category: {}", cat.getName()))
+            .flatMap(category -> {
+                // Create the product with the category relationship
+                Product newProduct = ProductMapper.mapToProduct(product, category);
+                
+                return productRepository.save(newProduct)
+                    // After saving, load the relationship
+                    .flatMap(savedProduct -> {
+                        log.info("Product saved with ID: {}", savedProduct.getId());
+                        return productRepository.findByIdWithCategory(savedProduct.getId())
+                            .doOnNext(loadedProduct -> {
+                                if (loadedProduct.getMostSpecificCategory() != null) {
+                                    log.info("Category relationship verified: {}", 
+                                            loadedProduct.getMostSpecificCategory().getName());
+                                } else {
+                                    log.warn("Category relationship missing for product: {}", 
+                                            loadedProduct.getName());
+                                }
+                            })
+                            .defaultIfEmpty(savedProduct);
+                    });
+            })
+            .doOnSuccess(prod -> log.info("Inserted product: {}", prod.getName()));
+    }
 }
 

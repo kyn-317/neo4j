@@ -36,7 +36,6 @@ public class MasterNode {
             }
             parent = child;
         }
-//        System.out.println(this.toString());
     }
 
 

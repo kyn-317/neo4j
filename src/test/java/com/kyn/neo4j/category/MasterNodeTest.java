@@ -15,7 +15,7 @@ public class MasterNodeTest {
     @Test
     void testAddSingleCategoryPath() {
         // Given
-        String categoryPath = "Toys & Games/Arts & Crafts/Craft Kits/Paper Craft";
+        String categoryPath = "Toys & Games | Arts & Crafts | Craft Kits | Paper Craft";
 
         // When
         masterNode.addCategoryPath(categoryPath);
@@ -33,10 +33,10 @@ public class MasterNodeTest {
     @Test
     void testAddMultipleCategoryPaths() {
         // Given
-        String categoryPath1 = "Toys & Games/Arts & Crafts/Craft Kits/Paper Craft";
-        String categoryPath2 = "Toys & Games/Arts & Crafts/Craft Kits/Knitting";
-        String categoryPath3 = "Toys & Games/Games & Accessories/Board Games";
-        String categoryPath4 = "Video Games/Xbox One";
+        String categoryPath1 = "Toys & Games | Arts & Crafts | Craft Kits | Paper Craft";
+        String categoryPath2 = "Toys & Games | Arts & Crafts | Craft Kits | Knitting";
+        String categoryPath3 = "Toys & Games | Games & Accessories | Board Games";
+        String categoryPath4 = "Video Games | Xbox One";
 
         // When
         masterNode.addCategoryPath(categoryPath1);
@@ -79,7 +79,7 @@ public class MasterNodeTest {
     @Test
     void testAddDuplicateCategoryPath() {
         // Given
-        String categoryPath = "Toys & Games/Arts & Crafts";
+        String categoryPath = "Toys & Games | Arts & Crafts";
         
         // When
         masterNode.addCategoryPath(categoryPath);

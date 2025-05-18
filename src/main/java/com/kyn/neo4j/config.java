@@ -55,7 +55,34 @@ public class config {
 			productInsertService.deleteAllProducts().subscribe();
 			createCategoryTree(productInsertService).subscribe();
             productInsertService.createCategoryHierarchyFromMasterNode().subscribe();
+			insertProducts(productInsertService).subscribe();
 		};
+	}
+
+	private Flux<Void> insertProducts(ProductInsertService productInsertService) {
+		log.info("Starting category tree creation from file");
+		
+		try {
+			ClassPathResource resource = new ClassPathResource("product.jsonl");
+			Path filePath = Path.of(resource.getURI());
+			
+			return Flux.fromStream(Files.lines(filePath))
+				.map(line -> convertLineToProduct(line, false))
+				.filter(product -> product != null)
+				.flatMap(productInsertService::insertProducts)
+				.doFinally(signalType -> {
+					try {
+						log.info("Closing file stream");
+						Files.lines(filePath).close();
+					} catch (Exception e) {
+						log.error("Failed to close file stream", e);
+					}
+				});
+				
+		} catch (Exception e) {
+			log.error("Error creating category tree: {}", e.getMessage());
+			return Flux.error(e);
+		}
 	}
 
 	private Mono<Void> createCategoryTree(ProductInsertService productInsertService) {
@@ -66,7 +93,7 @@ public class config {
 			Path filePath = Path.of(resource.getURI());
 			
 			return Flux.fromStream(Files.lines(filePath))
-				.map(this::convertLineToProduct)
+				.map(line -> convertLineToProduct(line, true))
 				.filter(product -> product != null)
 				.concatMap(product -> 
 					productInsertService.createTreePath(product.getCategoryString())
@@ -91,9 +118,9 @@ public class config {
     /**
      * convert one line of JSONL file to ProductBasEntity
      */
-    private ProductData convertLineToProduct(String line) {
+    private ProductData convertLineToProduct(String line, Boolean isCategory) {
         try {
-            return mapJsonToProduct(objectMapper.readTree(line));
+            return mapJsonToProduct(objectMapper.readTree(line), isCategory);
         } catch (Exception e) {
             log.error("Failed to parse line: {}", line, e);
             return null;
@@ -103,9 +130,9 @@ public class config {
     /**
      * map JsonNode's fields to ProductBasEntity
      */
-    private ProductData mapJsonToProduct(JsonNode jsonNode) {
+    private ProductData mapJsonToProduct(JsonNode jsonNode , boolean isCategory) {
         ProductData product = new ProductData();
-        if (jsonNode.has("Product Name")) {
+        if (jsonNode.has("Product Name") && !isCategory) {
             product.setProductName(jsonNode.get("Product Name").asText());
         }
         
@@ -113,22 +140,23 @@ public class config {
             product.setCategoryString(jsonNode.get("Category").asText());
         }
         
-        if (jsonNode.has("Description")) {
+        if (jsonNode.has("Description")&& !isCategory) {
             product.setDescription(jsonNode.get("Description").asText());
         }
         
-        if (jsonNode.has("Product Specification")) {
+        if (jsonNode.has("Product Specification") && !isCategory) {
             product.setSpecification(jsonNode.get("Product Specification").asText());
         }
         
-        if (jsonNode.has("Selling Price")) {
+        if (jsonNode.has("Selling Price") && !isCategory) {
             String price = String.valueOf(jsonNode.get("Selling Price").asDouble());
             product.setPrice(Double.parseDouble(price));
         }
         
-        if (jsonNode.has("Image")) {
+        if (jsonNode.has("Image") && !isCategory) {
             product.setImage(jsonNode.get("Image").asText());
         }
+		log.info("Product: {}", product);
         return product;
     }
 }
