@@ -13,7 +13,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kyn.neo4j.common.DataInsertService;
+import com.kyn.neo4j.common.DataInsertServiceImpl;
 import com.kyn.neo4j.product.ProductData;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,16 +24,16 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class initConfig {
 
-    private final DataInsertService productInsertService;
+    private final DataInsertServiceImpl productInsertService;
 	private final ObjectMapper objectMapper;
 	
-    public initConfig(DataInsertService productInsertService) {
+    public initConfig(DataInsertServiceImpl productInsertService) {
         this.productInsertService = productInsertService;
         this.objectMapper = new ObjectMapper();
 	}
     
 	@Bean
-	CommandLineRunner command(DataInsertService productInsertService) {
+	CommandLineRunner command(DataInsertServiceImpl productInsertService) {
 		return args -> {
 			log.info("Starting category import process");
 			//delete all products and categories
@@ -105,7 +105,7 @@ public class initConfig {
 		log.info("start insertProducts ");
 		return Flux.fromIterable(productDataListParam)
 			.flatMap(product -> 
-				productInsertService.insertProducts(product),1)
+				productInsertService.insertProducts(product),5)
 			.doOnComplete(() -> log.info("insertProducts - Flux.fromIterable COMPLETED"))
 			.doOnError(e -> log.error("insertProducts - Error in Flux.fromIterable chain", e))
 			.then();

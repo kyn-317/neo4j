@@ -17,55 +17,50 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
-public class DataInsertService {
+public class DataInsertServiceImpl implements DataInserService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final MasterNode masterNode;
 
-    public DataInsertService(CategoryRepository categoryRepository, ProductRepository productRepository) {
+    public DataInsertServiceImpl(CategoryRepository categoryRepository, ProductRepository productRepository) {
         this.categoryRepository = categoryRepository;
-        this.masterNode = new MasterNode();
         this.productRepository = productRepository;
+        this.masterNode = new MasterNode();
     }
 
     //delete all products and categories
+    @Override
     public Mono<Void> deleteAllProducts() {
         return categoryRepository.deleteAll()
         .then(productRepository.deleteAll());
     }
 
     // Create tree structure in MasterNode
-    public Mono<Void> createTreePath(String categoryString) {
-        try {
-            masterNode.addCategoryPath(categoryString);
-            return Mono.empty();
-        } catch (Exception e) {
-            log.error("Error creating tree path for category: {}", categoryString, e);
-            return Mono.error(e);
-        }
+    @Override
+    public Mono<Void> createTreePath(String categoryString) {    
+        return Mono.fromRunnable(() -> masterNode.addCategoryPath(categoryString));
     }
 
     //create category hierarchy from master node
+    @Override
     public Mono<Void> createCategoryHierarchyFromMasterNode() {
         log.info("Creating category hierarchy from MasterNode");
         // First create root category with null parent
         return Flux.fromIterable(masterNode.getChildren().entrySet())
-                    // Use concatMap to process one category at a time
+                    // Use concatMap to process 3 category at a time
                     .concatMap(entry -> {
                         CategoryNode rootNode = entry.getValue();
                         return justCreateCategory(rootNode.getName())
-                            .flatMap(category -> {
-                                return categoryRepository.save(category)
-                                    .flatMap(savedCategory -> 
-                                        createHiearchy(rootNode, savedCategory)
-                                    );
-                            });
-                    }, 1) // Process one category at a time
-                    .then();
+                            .flatMap(category -> 
+                                 categoryRepository.save(category)
+                                    .flatMap(savedCategory -> createHiearchy(rootNode, savedCategory))
+                            );
+                        }, 3).then();
     }
 
     //insert products
+    @Override
     public Mono<ProductWithCategory> insertProducts(ProductData product){
         return categoryRepository.saveProductWithExactCategory(
             UUID.randomUUID(),
@@ -82,7 +77,6 @@ public class DataInsertService {
     private Mono<Category> createHiearchy(CategoryNode node, Category parentCategory) {
 
         return Flux.fromIterable(node.getChildren().entrySet())
-            // Use concatMap to process one child at a time
             .concatMap(childEntry -> {
                 CategoryNode childNode = childEntry.getValue();
                 Category childCategory = Category.builder()
@@ -93,8 +87,7 @@ public class DataInsertService {
                 .flatMap(savedCategory -> 
                     createHiearchy(childNode, savedCategory)
                 );
-
-            }, 1) // Process one child at a time
+            }, 3) 
             .then(Mono.just(parentCategory));
     }
 

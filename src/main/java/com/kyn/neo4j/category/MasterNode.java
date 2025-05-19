@@ -39,7 +39,7 @@ public class MasterNode {
         }
     }
 
-    //print master node
+    //print from master node to all children nodes
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

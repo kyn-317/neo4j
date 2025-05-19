@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface CategoryRepository extends ReactiveNeo4jRepository<Category, UUID> {
-    
+    // find category by category String and merge with product
     @Query("""
         WITH split($categoryString, '|') AS parts
         WITH [part IN parts | trim(part)] AS names

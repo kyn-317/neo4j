@@ -3,23 +3,21 @@ package com.kyn.neo4j.category;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.Data;
+
+@Data
 public class CategoryNode {
+    //node name
     String name;
+    //children nodes
     Map<String, CategoryNode> children = new HashMap<>();
-
-    public String getName() {
-        return name;
-    }
-
-    public Map<String, CategoryNode> getChildren() {
-        return children;
-    }
 
     @Override
     public String toString() {
         return toString(0);
     }
 
+    //print category node
     public String toString(int indentLevel) {
         StringBuilder sb = new StringBuilder();
         String indent = "  ".repeat(indentLevel);
