@@ -1,19 +1,20 @@
 package com.kyn.neo4j.category;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Data
 public class MasterNode {
     private Map<String,CategoryNode> children = new HashMap<>();
-    private List<String[]> nodeAndParent = new ArrayList<>();
 
+    //add category path to master node
     public void addCategoryPath(String categoryPath) {
         List<String> categoryPathArray = Arrays.asList(categoryPath.split("\\|"))
                         .stream().map(String::trim).collect(Collectors.toList());
@@ -38,15 +39,7 @@ public class MasterNode {
         }
     }
 
-
-    public MasterNode getMasterNode() {
-        return this;
-    }
-
-    public Map<String, CategoryNode> getChildren() {
-        return children;
-    }
-    
+    //print master node
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -55,33 +48,5 @@ public class MasterNode {
             sb.append(entry.getValue().toString(1));  // Start with indentation level 1
         }
         return sb.toString();
-    }
-    
-
-    private void traverseNode(CategoryNode node, String parentName) {
-        
-        // Add current node with its parent
-        if (parentName != null) {
-            this.nodeAndParent.add(new String[]{node.name, parentName});
-        }
-        
-        // Recursively traverse all children
-        for (Map.Entry<String, CategoryNode> child : node.children.entrySet()) {
-            traverseNode(child.getValue(), node.name);
-        }
-    }
-
-    public void traverse() {
-        log.info("Traversing Start");
-        for(Map.Entry<String, CategoryNode> entry : this.children.entrySet()){
-            this.nodeAndParent.add(new String[]{entry.getValue().name, null});
-            traverseNode(entry.getValue(), null);
-        }
-        log.info("Traversing End");
-        
-    }
-
-    public String toStringNodeAndParent(){
-        return this.nodeAndParent.stream().map(Arrays::toString).collect(Collectors.joining(", "));
     }
 }

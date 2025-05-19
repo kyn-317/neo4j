@@ -1,6 +1,5 @@
-package com.kyn.neo4j.service;
+package com.kyn.neo4j.common;
 
-import java.util.Arrays;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -9,7 +8,6 @@ import com.kyn.neo4j.category.Category;
 import com.kyn.neo4j.category.CategoryNode;
 import com.kyn.neo4j.category.CategoryRepository;
 import com.kyn.neo4j.category.MasterNode;
-import com.kyn.neo4j.common.ProductWithCategory;
 import com.kyn.neo4j.product.ProductData;
 import com.kyn.neo4j.product.ProductRepository;
 
@@ -31,9 +29,7 @@ public class ProductInsertService {
         this.productRepository = productRepository;
     }
 
-    public MasterNode getMasterNode() {
-        return masterNode;
-    }
+    //delete all products and categories
     public Mono<Void> deleteAllProducts() {
         return categoryRepository.deleteAll()
         .then(productRepository.deleteAll());
@@ -50,13 +46,7 @@ public class ProductInsertService {
         }
     }
 
-    public Mono<String> createTreePathFromMasterNode(){
-        masterNode.traverse();
-        return Mono.just(masterNode.toStringNodeAndParent());
-    }
-
-
-
+    //create category hierarchy from master node
     public Mono<Void> createCategoryHierarchyFromMasterNode() {
         log.info("Creating category hierarchy from MasterNode");
         // First create root category with null parent
@@ -75,6 +65,20 @@ public class ProductInsertService {
                     .then();
     }
 
+    //insert products
+    public Mono<ProductWithCategory> insertProducts(ProductData product){
+        return categoryRepository.saveProductWithExactCategory(
+            UUID.randomUUID(),
+            product.getProductName(),
+            product.getDescription(),
+            product.getPrice(),
+            product.getSpecification(),
+            product.getImage(),
+            product.getCategoryString()
+        );
+    }
+
+    //create category hierarchy from master node
     private Mono<Category> createHiearchy(CategoryNode node, Category parentCategory) {
 
         return Flux.fromIterable(node.getChildren().entrySet())
@@ -93,7 +97,8 @@ public class ProductInsertService {
             }, 1) // Process one child at a time
             .then(Mono.just(parentCategory));
     }
-    
+
+    //create category
     private Mono<Category> justCreateCategory(String categoryName){
         return categoryRepository.save(Category.builder()
             .name(categoryName)
@@ -101,30 +106,8 @@ public class ProductInsertService {
             .doOnSuccess(cat -> log.info("Created new category: {}", cat.getName()));
     }
 
-    public Mono<Category> getCategoryByCategoryString(String categoryString) {           
-        log.info("Finding category by path string: {}", categoryString);
-        // First try finding directly by path string
-        return categoryRepository.findCategoryByPathString(categoryString)
-            .onErrorResume(e -> 
-                categoryRepository.findCategoryByPath(Arrays.stream(categoryString.split("\\|"))
-                .map(String::trim).toArray(String[]::new))
-                .onErrorResume(err -> {
-                    log.error("Error finding category by path: {}", err.getMessage());
-                    return Mono.empty();
-                })
-            );
-    }
+ 
        
-    public Mono<ProductWithCategory> insertProducts(ProductData product){
-        return categoryRepository.saveProductWithExactCategory(
-            UUID.randomUUID(),
-            product.getProductName(),
-            product.getDescription(),
-            product.getPrice(),
-            product.getSpecification(),
-            product.getImage(),
-            product.getCategoryString()
-        );
-    }
+
 }
 

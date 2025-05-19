@@ -13,8 +13,8 @@ import org.springframework.core.io.ClassPathResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kyn.neo4j.common.ProductInsertService;
 import com.kyn.neo4j.product.ProductData;
-import com.kyn.neo4j.service.ProductInsertService;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
@@ -22,69 +22,29 @@ import reactor.core.publisher.Mono;
 
 @Configuration
 @Slf4j
-public class config {
+public class initConfig {
 
     private final ProductInsertService productInsertService;
 	private final ObjectMapper objectMapper;
 	
-    public config(ProductInsertService productInsertService) {
+    public initConfig(ProductInsertService productInsertService) {
         this.productInsertService = productInsertService;
         this.objectMapper = new ObjectMapper();
 	}
     
-/*     @Bean
-	CommandLineRunner demo(PersonService personService) {
-		return args -> {
-			Person greg = new Person("Greg");
-			Person roy = new Person("Roy");
-			Person craig = new Person("Craig");
-
-			personService.deleteAll()
-				.thenMany(
-					Flux.just(greg, roy, craig)
-					.flatMap(personService::save)
-					.then(personService.setTeammateByName("Greg", "Roy"))
-					.then(personService.setTeammateByName("Craig", "Roy"))
-					.then(personService.setTeammateByName("Craig", "Chris"))
-				)
-				.subscribe();
-		};
-	} */
-
 	@Bean
 	CommandLineRunner command(ProductInsertService productInsertService) {
 		return args -> {
 			log.info("Starting category import process");
+			//delete all products and categories
 			productInsertService.deleteAllProducts()
-				.then(convertLineToProduct())
-				.flatMap(this::createCategoryTree)
-				.flatMap(productDataList ->{
-					return productInsertService.createCategoryHierarchyFromMasterNode()
-					.then(insertProducts(productDataList));
-				})
+				.then(convertLineToProduct()) //get product data to list
+				.flatMap(this::createCategoryTree) //create category tree
+				.flatMap(productDataList ->
+					productInsertService.createCategoryHierarchyFromMasterNode() //create category hierarchy
+					.then(insertProducts(productDataList))) //insert products
 				.subscribe();
 		};
-	}
-
-	private Mono<Void> insertProducts(List<ProductData> productDataListParam) {
-		if (productDataListParam.isEmpty()) {
-			log.info("Product data list is empty for insertProducts, returning Mono.empty().");
-			return Mono.empty();
-		}
-		return Flux.fromIterable(productDataListParam)
-			.flatMap(product -> 
-				productInsertService.insertProducts(product),1)
-			.doOnComplete(() -> log.info("insertProducts - Flux.fromIterable COMPLETED"))
-			.doOnError(e -> log.error("insertProducts - Error in Flux.fromIterable chain", e))
-			.then();
-	}
-
-	private Mono<List<ProductData>> createCategoryTree(List<ProductData> productDataList) {
-		return Flux.fromIterable(productDataList)
-			.flatMap(product ->  productInsertService.createTreePath(product.getCategoryString()))
-			.doOnComplete(() -> log.info("createCategoryTree - Flux.fromIterable COMPLETED"))
-			.doOnError(e -> log.error("createCategoryTree - Error in Flux.fromIterable chain", e))
-			.then(Mono.just(productDataList));
 	}
 
 	private Mono<List<ProductData>> convertLineToProduct() {
@@ -125,6 +85,34 @@ public class config {
 			return Mono.error(e);
 		}
 	}
+
+
+	private Mono<List<ProductData>> createCategoryTree(List<ProductData> productDataList) {
+		return Flux.fromIterable(productDataList)
+			.flatMap(product ->  productInsertService.createTreePath(product.getCategoryString()))
+			.doOnComplete(() -> log.info("createCategoryTree - Flux.fromIterable COMPLETED"))
+			.doOnError(e -> log.error("createCategoryTree - Error in Flux.fromIterable chain", e))
+			.then(Mono.just(productDataList));
+	}
+
+
+
+	private Mono<Void> insertProducts(List<ProductData> productDataListParam) {
+		if (productDataListParam.isEmpty()) {
+			log.info("Product data list is empty for insertProducts, returning Mono.empty().");
+			return Mono.empty();
+		}
+		log.info("start insertProducts ");
+		return Flux.fromIterable(productDataListParam)
+			.flatMap(product -> 
+				productInsertService.insertProducts(product),1)
+			.doOnComplete(() -> log.info("insertProducts - Flux.fromIterable COMPLETED"))
+			.doOnError(e -> log.error("insertProducts - Error in Flux.fromIterable chain", e))
+			.then();
+	}
+
+
+	
 
 	/**
 	 * convert one line of JSONL file to ProductBasEntity
