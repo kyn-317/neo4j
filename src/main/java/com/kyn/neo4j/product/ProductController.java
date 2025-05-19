@@ -3,7 +3,6 @@ package com.kyn.neo4j.product;
 
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,12 +49,12 @@ public class ProductController {
     }
 
 
-    @PostMapping("/insertProducts")
-    public Mono<ProductData> insertProducts(@RequestBody ProductData productData){
+/*     @PostMapping("/insertProducts")
+    public Mono<ProductWithCategory> insertProducts(@RequestBody ProductData productData){
         log.info("Inserting products: {}", productData);
-        return productInsertService.insertProductsP(productData);
+        return productInsertService.insertProducts(productData);
 
-    }
+    } */
 
     private record categoryStringBody(String categoryString){}
 }

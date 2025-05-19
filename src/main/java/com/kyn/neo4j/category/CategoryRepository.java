@@ -6,8 +6,7 @@ import org.springframework.data.neo4j.repository.ReactiveNeo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
 
-import com.kyn.neo4j.product.Product;
-import com.kyn.neo4j.product.ProductData;
+import com.kyn.neo4j.common.ProductWithCategory;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -100,8 +99,7 @@ public interface CategoryRepository extends ReactiveNeo4jRepository<Category, UU
         WITH split($categoryString, '|') AS parts
         WITH [part IN parts | trim(part)] AS names
         MATCH (root:Category {name: names[0]})
-        CALL {
-            WITH root, names
+        CALL (root, names) {
             MATCH path = (root)-[:SUBCATEGORY*0..]->(lastCategory:Category)
             WHERE lastCategory.name = names[size(names)-1]
             WITH path, nodes(path) AS nodes, lastCategory
@@ -128,7 +126,7 @@ public interface CategoryRepository extends ReactiveNeo4jRepository<Category, UU
           MERGE (product)-[:BELONGS_TO]->(exactCategory)
           RETURN product, exactCategory
     """)
-    Mono<ProductData> saveProductWithExactCategory(
+    Mono<ProductWithCategory> saveProductWithExactCategory(
         UUID productId, 
         String name, 
         String description, 

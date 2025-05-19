@@ -1,7 +1,6 @@
 package com.kyn.neo4j.service;
 
 import java.util.Arrays;
-import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -10,13 +9,13 @@ import com.kyn.neo4j.category.Category;
 import com.kyn.neo4j.category.CategoryNode;
 import com.kyn.neo4j.category.CategoryRepository;
 import com.kyn.neo4j.category.MasterNode;
-import com.kyn.neo4j.product.Product;
+import com.kyn.neo4j.common.ProductWithCategory;
 import com.kyn.neo4j.product.ProductData;
-import com.kyn.neo4j.product.ProductMapper;
 import com.kyn.neo4j.product.ProductRepository;
+
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
@@ -72,7 +71,7 @@ public class ProductInsertService {
                                         createHiearchy(rootNode, savedCategory)
                                     );
                             });
-                    }, 5) // Process one category at a time
+                    }, 1) // Process one category at a time
                     .then();
     }
 
@@ -91,7 +90,7 @@ public class ProductInsertService {
                     createHiearchy(childNode, savedCategory)
                 );
 
-            }, 5) // Process one child at a time
+            }, 1) // Process one child at a time
             .then(Mono.just(parentCategory));
     }
     
@@ -104,34 +103,19 @@ public class ProductInsertService {
 
     public Mono<Category> getCategoryByCategoryString(String categoryString) {           
         log.info("Finding category by path string: {}", categoryString);
-        
         // First try finding directly by path string
         return categoryRepository.findCategoryByPathString(categoryString)
-            .doOnNext(cat -> log.info("Found category by path string: {}", cat.getName()))
-            .onErrorResume(e -> {
-                return categoryRepository.findCategoryByPath(Arrays.stream(categoryString.split("\\|"))
-                .map(String::trim)
-                .toArray(String[]::new))
-                .doOnNext(cat -> log.info("Found category by array path: {}", cat.getName()))
+            .onErrorResume(e -> 
+                categoryRepository.findCategoryByPath(Arrays.stream(categoryString.split("\\|"))
+                .map(String::trim).toArray(String[]::new))
                 .onErrorResume(err -> {
                     log.error("Error finding category by path: {}", err.getMessage());
                     return Mono.empty();
-                });
-            });
+                })
+            );
     }
-
-
-    public Mono<Void> insertProducts(ProductData product){
-        return getCategoryByCategoryString(product.getCategoryString())
-        .doOnNext(cat -> log.info("Found category: {}", cat.getName()))
-        .flatMap(category -> {
-            return productRepository.save(ProductMapper.mapToProduct(product, category));
-        }).doOnSuccess(prod -> log.info("Inserted product: {}", prod.getName()))
-        .then();
-    }
-
-    
-    public Mono<ProductData> insertProductsP(ProductData product){
+       
+    public Mono<ProductWithCategory> insertProducts(ProductData product){
         return categoryRepository.saveProductWithExactCategory(
             UUID.randomUUID(),
             product.getProductName(),
