@@ -17,13 +17,13 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
-public class ProductInsertService {
+public class DataInsertService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final MasterNode masterNode;
 
-    public ProductInsertService(CategoryRepository categoryRepository, ProductRepository productRepository) {
+    public DataInsertService(CategoryRepository categoryRepository, ProductRepository productRepository) {
         this.categoryRepository = categoryRepository;
         this.masterNode = new MasterNode();
         this.productRepository = productRepository;

@@ -13,7 +13,7 @@ import org.springframework.core.io.ClassPathResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kyn.neo4j.common.ProductInsertService;
+import com.kyn.neo4j.common.DataInsertService;
 import com.kyn.neo4j.product.ProductData;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,16 +24,16 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class initConfig {
 
-    private final ProductInsertService productInsertService;
+    private final DataInsertService productInsertService;
 	private final ObjectMapper objectMapper;
 	
-    public initConfig(ProductInsertService productInsertService) {
+    public initConfig(DataInsertService productInsertService) {
         this.productInsertService = productInsertService;
         this.objectMapper = new ObjectMapper();
 	}
     
 	@Bean
-	CommandLineRunner command(ProductInsertService productInsertService) {
+	CommandLineRunner command(DataInsertService productInsertService) {
 		return args -> {
 			log.info("Starting category import process");
 			//delete all products and categories
