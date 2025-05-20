@@ -37,15 +37,16 @@ public class initConfig {
 	CommandLineRunner command(DataInsertServiceImpl dataInsertService) {
 		return args -> {
 			log.info("Starting category import process");
-			MasterNode masterNode = new MasterNode();
 			//delete all products and categories
 			dataInsertService.deleteAllProducts()
 				.then(convertLineToProduct()) //get product data to list
-				.flatMap(productDataList -> 
-					createCategoryTree(productDataList, masterNode)//createTree	
-					.flatMap(updatedMasterNode -> 
-						dataInsertService.createCategoryHierarchyFromMasterNode(updatedMasterNode)//createHierarchy
-							.then(insertProducts(productDataList))))//insertProducts
+				.flatMap(productDataList -> Mono.zip(
+					createCategoryTree(productDataList), //createTree
+					Mono.just(productDataList)
+				))
+				.flatMap(tuple -> dataInsertService
+					.createCategoryHierarchyFromMasterNode(tuple.getT1()) //createHierarchy
+					.then(insertProducts(tuple.getT2())))
 				.subscribe(
 					null,
 					error -> log.error("Error during data import process", error),
@@ -94,7 +95,8 @@ public class initConfig {
 	}
 
 
-	private Mono<MasterNode> createCategoryTree(List<ProductData> productDataList, MasterNode masterNode) {
+	private Mono<MasterNode> createCategoryTree(List<ProductData> productDataList) {
+		MasterNode masterNode = new MasterNode();
 		return Flux.fromIterable(productDataList)
 			.doOnNext(data -> masterNode.addCategoryPath(data.getCategoryString()))
 			.doOnComplete(() -> log.info("createCategoryTree - Flux.fromIterable COMPLETED"))

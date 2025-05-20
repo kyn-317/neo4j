@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import lombok.Data;
@@ -16,27 +17,30 @@ public class MasterNode {
 
     //add category path to master node
     public void addCategoryPath(String categoryPath) {
-        List<String> categoryPathArray = Arrays.asList(categoryPath.split("\\|"))
-                        .stream().map(String::trim).collect(Collectors.toList());
-        if (categoryPathArray == null || categoryPathArray.isEmpty()) return;
-        String root = categoryPathArray.get(0); 
-        CategoryNode current = this.children.get(root);
-        if (current == null) {
-            current = new CategoryNode();
-            current.name = root;
-            this.children.put(root, current);
-        }
-        CategoryNode parent = current;
-        for (int i = 1; i < categoryPathArray.size(); i++) {
-            String cat = categoryPathArray.get(i);
-            CategoryNode child = parent.children.get(cat);
-            if (child == null) {
-                child = new CategoryNode();
-                child.name = cat;
-                parent.children.put(cat, child);
-            }
-            parent = child;
-        }
+        List<String> categories = Arrays.stream(categoryPath.split("\\|"))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(Collectors.toList());
+
+        if (categories.isEmpty()) return;
+
+        CategoryNode current = children
+            .computeIfAbsent(categories.get(0), getCategoryNode());
+
+        categories.stream()
+            .skip(1)
+            .reduce(current, 
+                (parent, cat) -> parent.children
+                    .computeIfAbsent(cat, getCategoryNode()),
+                (a, b) -> b);  
+    }
+    
+    private Function<String, CategoryNode> getCategoryNode(){
+        return  root -> {
+                CategoryNode node = new CategoryNode();
+                node.name = root;
+                return node;
+            };
     }
 
     //print from master node to all children nodes
