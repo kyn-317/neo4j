@@ -1,5 +1,6 @@
 package com.kyn.neo4j.user.dto;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -44,7 +45,6 @@ public class UserDTO {
     public static class FriendDTO {
         private UUID userId;
         private String name;
-        private Double balance;
 
         public static FriendDTO from(User user) {
             if (user == null) return null;
@@ -52,7 +52,6 @@ public class UserDTO {
             return FriendDTO.builder()
                 .userId(user.getUserId())
                 .name(user.getName())
-                .balance(user.getBalance())
                 .build();
         }
     }

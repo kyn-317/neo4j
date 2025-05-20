@@ -13,6 +13,8 @@ import com.kyn.neo4j.user.entity.User;
 import com.kyn.neo4j.user.service.interfaces.UserService;
 
 import reactor.core.publisher.Mono;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("user-order")
@@ -25,15 +27,13 @@ public class UserOrderController {
     }
 
     @PostMapping("create")
-    public Mono<UserDTO> createUser(@RequestBody User user) {
-        return userService.createUser(user)
-            .map(UserDTO::from);
+    public Mono<User> createUser(@RequestBody User user) {
+        return userService.createUser(user);
     }
 
     @GetMapping("get/{name}")
-    public Mono<UserDTO> getUserByName(@PathVariable String name) {
-        return userService.getUserByName(name)
-            .map(UserDTO::from);
+    public Mono<User> getUserByName(@PathVariable String name) {
+        return userService.getUserByName(name);
     }
 
     @DeleteMapping("delete")
@@ -42,14 +42,20 @@ public class UserOrderController {
     }
 
     @PostMapping("update")
-    public Mono<UserDTO> updateUser(@RequestBody User user) {
+    public Mono<User> updateUser(@RequestBody User user) {
         return userService.updateUser(user);
     }
 
     @GetMapping("add-friend/{userName}/{friendName}")
-    public Mono<UserDTO> addFriend(@PathVariable String userName, @PathVariable String friendName) {
+    public Mono<User> addFriend(@PathVariable String userName, @PathVariable String friendName) {
         return userService.addFriend(userName, friendName);
     }
+
+    @GetMapping("get-user-with-friends/{name}")
+    public Mono<UserDTO> getUserWithFriends(@PathVariable String name) {
+        return userService.getUserWithFriends(name);
+    }
+    
 
 }
 

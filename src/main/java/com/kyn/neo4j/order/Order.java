@@ -33,10 +33,8 @@ public class Order {
     private Integer quantity;
 
     @Relationship(type="ORDERED_USER", direction = Relationship.Direction.OUTGOING)
-    @JsonBackReference
     private User user;
 
     @Relationship(type="ORDERED_PRODUCT", direction = Relationship.Direction.OUTGOING)
-    @JsonManagedReference
     private Product product;
 }

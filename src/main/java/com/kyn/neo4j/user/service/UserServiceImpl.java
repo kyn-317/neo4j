@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<UserDTO> updateUser(User user) {
+    public Mono<User> updateUser(User user) {
         return this.getUserByName(user.getName())
             .filter(existingUser -> existingUser.getName().equals(user.getName()))
             .flatMap(existingUser -> {
@@ -47,10 +47,10 @@ public class UserServiceImpl implements UserService {
                 return userRepository.save(existingUser)
                     .flatMap(savedUser -> {
                         savedUser.setFriends(existingFriends);
-                        return Mono.just(UserDTO.from(savedUser));
+                        return Mono.just(savedUser);
                     });
             })
-            .switchIfEmpty(Mono.just(UserDTO.from(EMPTY_USER)));
+            .switchIfEmpty(Mono.just(EMPTY_USER));
     }
 
     @Override
@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Mono<UserDTO> addFriend(String userName, String friendName) {
+    public Mono<User> addFriend(String userName, String friendName) {
         return Mono.zip(this.getUserByName(userName), this.getUserByName(friendName))
             .flatMap(tuple -> {
                 User user = tuple.getT1();
@@ -85,12 +85,19 @@ public class UserServiceImpl implements UserService {
                     .targetUser(friend)
                     .build();
                 existingFriends.add(newFriendRel);
-                
+                user.setFriends(existingFriends);
                 return userRepository.save(user)
                     .flatMap(savedUser -> {
                         savedUser.setFriends(existingFriends);
-                        return Mono.just(UserDTO.from(savedUser));
+                        return Mono.just(savedUser);
                     });
             });
     }
+
+    @Override
+    public Mono<UserDTO> getUserWithFriends(String name) {
+        return userRepository.findByNameWithFriends(name);
+    }
+
+
 }
