@@ -1,4 +1,6 @@
-package com.kyn.neo4j.common;
+package com.kyn.neo4j.common.dto;
+
+import java.util.Set;
 
 import com.kyn.neo4j.category.Category;
 import com.kyn.neo4j.product.Product;
@@ -12,7 +14,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProductWithCategory {
-    private Category exactCategory;
-    private Product product;
+public class ProductGraph {
+    
+    private Set<Category> categories;
+    private Set<Product> products;
 }

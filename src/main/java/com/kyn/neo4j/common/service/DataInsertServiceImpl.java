@@ -1,4 +1,4 @@
-package com.kyn.neo4j.common;
+package com.kyn.neo4j.common.service;
 
 import java.util.UUID;
 
@@ -8,6 +8,8 @@ import com.kyn.neo4j.category.Category;
 import com.kyn.neo4j.category.CategoryNode;
 import com.kyn.neo4j.category.CategoryRepository;
 import com.kyn.neo4j.category.MasterNode;
+import com.kyn.neo4j.common.dto.ProductWithCategory;
+import com.kyn.neo4j.common.service.interfaces.DataInserService;
 import com.kyn.neo4j.product.ProductData;
 import com.kyn.neo4j.product.ProductRepository;
 
@@ -21,12 +23,10 @@ public class DataInsertServiceImpl implements DataInserService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
-    private final MasterNode masterNode;
 
     public DataInsertServiceImpl(CategoryRepository categoryRepository, ProductRepository productRepository) {
         this.categoryRepository = categoryRepository;
         this.productRepository = productRepository;
-        this.masterNode = new MasterNode();
     }
 
     //delete all products and categories
@@ -36,18 +36,12 @@ public class DataInsertServiceImpl implements DataInserService {
         .then(productRepository.deleteAll());
     }
 
-    // Create tree structure in MasterNode
-    @Override
-    public Mono<Void> createTreePath(String categoryString) {    
-        return Mono.fromRunnable(() -> masterNode.addCategoryPath(categoryString));
-    }
-
     //create category hierarchy from master node
     @Override
-    public Mono<Void> createCategoryHierarchyFromMasterNode() {
+    public Mono<Void> createCategoryHierarchyFromMasterNode(MasterNode node) {
         log.info("Creating category hierarchy from MasterNode");
         // First create root category with null parent
-        return Flux.fromIterable(masterNode.getChildren().entrySet())
+        return Flux.fromIterable(node.getChildren().entrySet())
                     // Use concatMap to process 3 category at a time
                     .concatMap(entry -> {
                         CategoryNode rootNode = entry.getValue();

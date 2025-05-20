@@ -13,7 +13,8 @@ import org.springframework.core.io.ClassPathResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kyn.neo4j.common.DataInsertServiceImpl;
+import com.kyn.neo4j.category.MasterNode;
+import com.kyn.neo4j.common.service.DataInsertServiceImpl;
 import com.kyn.neo4j.product.ProductData;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,26 +25,32 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class initConfig {
 
-    private final DataInsertServiceImpl productInsertService;
+    private final DataInsertServiceImpl dataInsertService;
 	private final ObjectMapper objectMapper;
 	
-    public initConfig(DataInsertServiceImpl productInsertService) {
-        this.productInsertService = productInsertService;
+    public initConfig(DataInsertServiceImpl dataInsertService) {
+        this.dataInsertService = dataInsertService;
         this.objectMapper = new ObjectMapper();
 	}
     
 	@Bean
-	CommandLineRunner command(DataInsertServiceImpl productInsertService) {
+	CommandLineRunner command(DataInsertServiceImpl dataInsertService) {
 		return args -> {
 			log.info("Starting category import process");
+			MasterNode masterNode = new MasterNode();
 			//delete all products and categories
-			productInsertService.deleteAllProducts()
+			dataInsertService.deleteAllProducts()
 				.then(convertLineToProduct()) //get product data to list
-				.flatMap(this::createCategoryTree) //create category tree
-				.flatMap(productDataList ->
-					productInsertService.createCategoryHierarchyFromMasterNode() //create category hierarchy
-					.then(insertProducts(productDataList))) //insert products
-				.subscribe();
+				.flatMap(productDataList -> 
+					createCategoryTree(productDataList, masterNode)//createTree	
+					.flatMap(updatedMasterNode -> 
+						dataInsertService.createCategoryHierarchyFromMasterNode(updatedMasterNode)//createHierarchy
+							.then(insertProducts(productDataList))))//insertProducts
+				.subscribe(
+					null,
+					error -> log.error("Error during data import process", error),
+					() -> log.info("Data import process completed successfully")
+				);
 		};
 	}
 
@@ -87,12 +94,12 @@ public class initConfig {
 	}
 
 
-	private Mono<List<ProductData>> createCategoryTree(List<ProductData> productDataList) {
+	private Mono<MasterNode> createCategoryTree(List<ProductData> productDataList, MasterNode masterNode) {
 		return Flux.fromIterable(productDataList)
-			.flatMap(product ->  productInsertService.createTreePath(product.getCategoryString()))
+			.doOnNext(data -> masterNode.addCategoryPath(data.getCategoryString()))
 			.doOnComplete(() -> log.info("createCategoryTree - Flux.fromIterable COMPLETED"))
 			.doOnError(e -> log.error("createCategoryTree - Error in Flux.fromIterable chain", e))
-			.then(Mono.just(productDataList));
+			.then(Mono.just(masterNode));
 	}
 
 
@@ -105,7 +112,7 @@ public class initConfig {
 		log.info("start insertProducts ");
 		return Flux.fromIterable(productDataListParam)
 			.flatMap(product -> 
-				productInsertService.insertProducts(product),5)
+			dataInsertService.insertProducts(product),5)
 			.doOnComplete(() -> log.info("insertProducts - Flux.fromIterable COMPLETED"))
 			.doOnError(e -> log.error("insertProducts - Error in Flux.fromIterable chain", e))
 			.then();
