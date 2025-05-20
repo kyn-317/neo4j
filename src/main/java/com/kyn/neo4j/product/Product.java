@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
+import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 
 import com.kyn.neo4j.category.Category;
 
@@ -38,8 +39,8 @@ public class Product {
     @Property("image")
     private String image;
     
-    @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
-    private Category mostSpecificCategory; 
+    @Relationship(type = "BELONGS_TO", direction = Direction.OUTGOING)
+    private Category category;
 
     @Property("categoryString")
     private String categoryString;

@@ -47,11 +47,7 @@ public class initConfig {
 				.flatMap(tuple -> dataInsertService
 					.createCategoryHierarchyFromMasterNode(tuple.getT1()) //createHierarchy
 					.then(insertProducts(tuple.getT2())))
-				.subscribe(
-					null,
-					error -> log.error("Error during data import process", error),
-					() -> log.info("Data import process completed successfully")
-				);
+				.subscribe();
 		};
 	}
 

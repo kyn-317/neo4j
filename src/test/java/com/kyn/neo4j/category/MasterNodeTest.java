@@ -1,8 +1,8 @@
 package com.kyn.neo4j.category;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class MasterNodeTest {
     private MasterNode masterNode;
@@ -71,8 +71,7 @@ public class MasterNodeTest {
         masterNode.addCategoryPath(emptyPath);
 
         // Then
-        String expected = "MasterNode:\n"
-                        +"  - \n";
+        String expected = "MasterNode:\n";
         assertEquals(expected, masterNode.toString());
     }
 

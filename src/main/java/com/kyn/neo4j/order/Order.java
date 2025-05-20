@@ -9,11 +9,13 @@ import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
 import com.kyn.neo4j.product.Product;
-import com.kyn.neo4j.user.User;
+import com.kyn.neo4j.user.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Data
 @AllArgsConstructor
@@ -27,9 +29,14 @@ public class Order {
     @Property("price")
     private Double price;
 
+    @Property("quantity")
+    private Integer quantity;
+
     @Relationship(type="ORDERED_USER", direction = Relationship.Direction.OUTGOING)
+    @JsonBackReference
     private User user;
 
     @Relationship(type="ORDERED_PRODUCT", direction = Relationship.Direction.OUTGOING)
+    @JsonManagedReference
     private Product product;
 }

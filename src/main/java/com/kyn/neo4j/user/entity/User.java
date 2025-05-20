@@ -1,11 +1,13 @@
-package com.kyn.neo4j.user;
+package com.kyn.neo4j.user.entity;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.Relationship;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +29,8 @@ public class User {
     @Property("balance")
     private Double balance;
 
+    @Relationship(type="FRIEND", direction = Relationship.Direction.OUTGOING)
+    private List<FriendsRelationship> friends;
 
     public User() {}
     

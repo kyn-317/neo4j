@@ -60,17 +60,17 @@ public interface CategoryRepository extends ReactiveNeo4jRepository<Category, UU
         WITH [part IN parts | trim(part)] AS names
         MATCH (root:Category {name: names[0]}) 
         CALL(root, names){
-            MATCH path = (root)-[:SUBCATEGORY*0..]->(lastCategoryNode:Category) 
-            WHERE lastCategoryNode.name = names[size(names)-1] 
-            WITH path, nodes(path) AS pathNodes, lastCategoryNode
-            WHERE size(pathNodes) = size(names) 
-                AND ALL(i IN RANGE(0, size(names)-1) WHERE pathNodes[i].name = names[i])
-            RETURN lastCategoryNode AS foundExactCategory, pathNodes AS fullPathNodes
+            MATCH path = (root)-[:SUBCATEGORY*0..]->(lastCategory:Category) 
+            WHERE lastCategory.name = names[size(names)-1] 
+            WITH path, nodes(path) AS nodes, lastCategory
+            WHERE size(nodes) = size(names) 
+                AND ALL(i IN RANGE(0, size(names)-1) WHERE nodes[i].name = names[i])
+            RETURN lastCategory AS exactCategory
             LIMIT 1
         }
-        WITH foundExactCategory,fullPathNodes
-        WHERE foundExactCategory IS NOT NULL
-        MATCH (foundExactCategory)-[:SUBCATEGORY*0..]->(relevantCategory:Category) 
+        WITH exactCategory
+        WHERE exactCategory IS NOT NULL
+        MATCH (exactCategory)-[:SUBCATEGORY*0..]->(relevantCategory:Category) 
         OPTIONAL MATCH (product:Product)-[:BELONGS_TO]->(relevantCategory)
         RETURN
             collect(DISTINCT relevantCategory) AS categories,
