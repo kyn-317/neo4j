@@ -2,7 +2,7 @@ package com.kyn.neo4j.common.service;
 
 import org.springframework.stereotype.Service;
 
-import com.kyn.neo4j.category.CategoryRepository;
+import com.kyn.neo4j.category.repository.CategoryRepository;
 import com.kyn.neo4j.common.dto.ProductGraph;
 import com.kyn.neo4j.common.service.interfaces.DataSearchService;
 

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.kyn.neo4j.category.util.MasterNode;
+
 public class MasterNodeTest {
     private MasterNode masterNode;
 

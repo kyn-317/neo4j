@@ -4,14 +4,14 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.kyn.neo4j.category.Category;
-import com.kyn.neo4j.category.CategoryNode;
-import com.kyn.neo4j.category.CategoryRepository;
-import com.kyn.neo4j.category.MasterNode;
+import com.kyn.neo4j.category.entity.Category;
+import com.kyn.neo4j.category.repository.CategoryRepository;
+import com.kyn.neo4j.category.util.CategoryNode;
+import com.kyn.neo4j.category.util.MasterNode;
 import com.kyn.neo4j.common.dto.ProductWithCategory;
 import com.kyn.neo4j.common.service.interfaces.DataInserService;
-import com.kyn.neo4j.product.ProductData;
-import com.kyn.neo4j.product.ProductRepository;
+import com.kyn.neo4j.product.dto.ProductData;
+import com.kyn.neo4j.product.repository.ProductRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;

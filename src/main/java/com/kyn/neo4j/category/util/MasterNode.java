@@ -1,4 +1,4 @@
-package com.kyn.neo4j.category;
+package com.kyn.neo4j.category.util;
 
 import java.util.Arrays;
 import java.util.HashMap;

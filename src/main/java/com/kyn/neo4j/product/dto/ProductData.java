@@ -1,4 +1,4 @@
-package com.kyn.neo4j.product;
+package com.kyn.neo4j.product.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

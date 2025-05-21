@@ -1,4 +1,4 @@
-package com.kyn.neo4j.order;
+package com.kyn.neo4j.order.entity;
 
 import java.util.UUID;
 
@@ -8,14 +8,12 @@ import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import com.kyn.neo4j.product.Product;
+import com.kyn.neo4j.product.entity.Product;
 import com.kyn.neo4j.user.entity.User;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Data
 @AllArgsConstructor

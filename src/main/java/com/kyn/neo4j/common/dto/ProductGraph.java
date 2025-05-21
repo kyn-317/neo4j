@@ -2,8 +2,8 @@ package com.kyn.neo4j.common.dto;
 
 import java.util.Collection;
 
-import com.kyn.neo4j.category.Category;
-import com.kyn.neo4j.product.Product;
+import com.kyn.neo4j.category.entity.Category;
+import com.kyn.neo4j.product.entity.Product;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kyn.neo4j.user.dto.UserDTO;
 import com.kyn.neo4j.user.entity.User;
-import com.kyn.neo4j.user.service.Neo4jTemplateService;
 import com.kyn.neo4j.user.service.interfaces.UserService;
 
 import reactor.core.publisher.Mono;
@@ -22,20 +21,19 @@ import reactor.core.publisher.Mono;
 public class UserOrderController {
 
     private final UserService userService;
-    private final Neo4jTemplateService neo4jTemplateService;
 
-    public UserOrderController(UserService userService, Neo4jTemplateService neo4jTemplateService) {
+
+    public UserOrderController(UserService userService) {
         this.userService = userService;
-        this.neo4jTemplateService = neo4jTemplateService;
     }
 
     @PostMapping("create")
-    public Mono<User> createUser(@RequestBody User user) {
+    public Mono<UserDTO> createUser(@RequestBody User user) {
         return userService.createUser(user);
     }
 
     @GetMapping("get/{name}")
-    public Mono<User> getUserByName(@PathVariable String name) {
+    public Mono<UserDTO> getUserByName(@PathVariable String name) {
         return userService.getUserByName(name);
     }
 
@@ -45,12 +43,12 @@ public class UserOrderController {
     }
 
     @PostMapping("update")
-    public Mono<User> updateUser(@RequestBody User user) {
+    public Mono<UserDTO> updateUser(@RequestBody User user) {
         return userService.updateUser(user);
     }
 
     @GetMapping("add-friend/{userName}/{friendName}")
-    public Mono<User> addFriend(@PathVariable String userName, @PathVariable String friendName) {
+    public Mono<UserDTO> addFriend(@PathVariable String userName, @PathVariable String friendName) {
         return userService.addFriend(userName, friendName);
     }
 
@@ -60,9 +58,5 @@ public class UserOrderController {
     }
     
 
-    @GetMapping("get-user-with-friends-count/{name}")
-    public Mono<UserDTO> getUserWithFriendsCount(@PathVariable String name) {
-        return neo4jTemplateService.findByName(name);
-    }
 }
 

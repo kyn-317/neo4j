@@ -1,8 +1,8 @@
 package com.kyn.neo4j.common.service.interfaces;
 
-import com.kyn.neo4j.category.MasterNode;
+import com.kyn.neo4j.category.util.MasterNode;
 import com.kyn.neo4j.common.dto.ProductWithCategory;
-import com.kyn.neo4j.product.ProductData;
+import com.kyn.neo4j.product.dto.ProductData;
 
 import reactor.core.publisher.Mono;
 

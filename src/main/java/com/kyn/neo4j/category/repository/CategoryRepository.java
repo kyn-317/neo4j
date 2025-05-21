@@ -1,4 +1,4 @@
-package com.kyn.neo4j.category;
+package com.kyn.neo4j.category.repository;
 
 import java.util.UUID;
 
@@ -6,6 +6,7 @@ import org.springframework.data.neo4j.repository.ReactiveNeo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.stereotype.Repository;
 
+import com.kyn.neo4j.category.entity.Category;
 import com.kyn.neo4j.common.dto.ProductGraph;
 import com.kyn.neo4j.common.dto.ProductWithCategory;
 

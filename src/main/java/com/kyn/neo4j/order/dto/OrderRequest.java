@@ -1,19 +1,18 @@
-package com.kyn.neo4j.user.dto;
-
-import java.util.List;
+package com.kyn.neo4j.order.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-        
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserDTO {
+public class OrderRequest {
+    private String orderId;
+    private Double price;
+    private Integer quantity;
+    private String productId;
     private String userId;
-    private String name;
-    private Double balance;
-    private List<FriendDTO> friends;
 }

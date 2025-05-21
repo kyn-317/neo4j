@@ -6,12 +6,12 @@ import com.kyn.neo4j.user.entity.User;
 import reactor.core.publisher.Mono;
 
 public interface UserService {
-    public Mono<User> createUser(User user);
-    public Mono<User> getUser(String userId);
-    public Mono<User> getUserByName(String name);
-    public Mono<User> updateUser(User user);
+    public Mono<UserDTO> createUser(User user);
+    public Mono<UserDTO> getUser(String userId);
+    public Mono<UserDTO> getUserByName(String name);
+    public Mono<UserDTO> updateUser(User user);
     public Mono<Void> deleteUser(String userId);
     public Mono<Void> deleteAllUser();
-    public Mono<User> addFriend(String userName, String friendName);
     public Mono<UserDTO> getUserWithFriends(String name);
+    public Mono<UserDTO> addFriend(String userName, String friendName);
 }

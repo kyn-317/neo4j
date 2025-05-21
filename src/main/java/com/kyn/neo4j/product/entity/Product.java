@@ -1,4 +1,4 @@
-package com.kyn.neo4j.product;
+package com.kyn.neo4j.product.entity;
 
 import java.util.UUID;
 
@@ -9,7 +9,7 @@ import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.Relationship;
 import org.springframework.data.neo4j.core.schema.Relationship.Direction;
 
-import com.kyn.neo4j.category.Category;
+import com.kyn.neo4j.category.entity.Category;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

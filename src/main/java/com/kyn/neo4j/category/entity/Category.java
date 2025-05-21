@@ -1,4 +1,4 @@
-package com.kyn.neo4j.category;
+package com.kyn.neo4j.category.entity;
 
 import java.util.UUID;
 

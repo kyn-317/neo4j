@@ -1,4 +1,4 @@
-package com.kyn.neo4j;
+package com.kyn.neo4j.common.config;
 
 
 import java.nio.file.Files;
@@ -13,9 +13,9 @@ import org.springframework.core.io.ClassPathResource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.kyn.neo4j.category.MasterNode;
+import com.kyn.neo4j.category.util.MasterNode;
 import com.kyn.neo4j.common.service.DataInsertServiceImpl;
-import com.kyn.neo4j.product.ProductData;
+import com.kyn.neo4j.product.dto.ProductData;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;

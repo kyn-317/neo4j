@@ -1,4 +1,4 @@
-package com.kyn.neo4j;
+package com.kyn.neo4j.common.config;
 
 import org.neo4j.driver.Driver;
 import org.springframework.context.annotation.Bean;
