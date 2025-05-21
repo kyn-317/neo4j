@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kyn.neo4j.user.dto.UserDTO;
 import com.kyn.neo4j.user.entity.FriendsRelationship;
 import com.kyn.neo4j.user.entity.User;
@@ -20,10 +21,12 @@ import reactor.core.publisher.Mono;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final ObjectMapper objectMapper;
     private static final User EMPTY_USER = new User();
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, ObjectMapper objectMapper) {
         this.userRepository = userRepository;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -86,11 +89,7 @@ public class UserServiceImpl implements UserService {
                     .build();
                 existingFriends.add(newFriendRel);
                 user.setFriends(existingFriends);
-                return userRepository.save(user)
-                    .flatMap(savedUser -> {
-                        savedUser.setFriends(existingFriends);
-                        return Mono.just(savedUser);
-                    });
+                return userRepository.save(user);
             });
     }
 
@@ -98,6 +97,5 @@ public class UserServiceImpl implements UserService {
     public Mono<UserDTO> getUserWithFriends(String name) {
         return userRepository.findByNameWithFriends(name);
     }
-
 
 }

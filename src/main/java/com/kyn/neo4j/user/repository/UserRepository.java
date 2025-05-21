@@ -14,20 +14,21 @@ import reactor.core.publisher.Mono;
 @Repository
 public interface UserRepository extends ReactiveNeo4jRepository<User, UUID> {
     
-    
     Mono<User> findByName(String name);
 
     @Query("""
             MATCH (u:User {name: $name})
-            OPTIONAL MATCH (u)-[:FRIEND]->(r:User)
-            WITH u, collect(CASE WHEN r IS NOT NULL THEN {userId: r.userId, name: r.name} ELSE NULL END) as friendList
+            MATCH (u)-[:FRIEND]->(f:User)
+            WITH u, collect({
+                userId: f.userId,
+                name: f.name
+            }) as friends
             RETURN {
                 userId: u.userId,
                 name: u.name,
                 balance: u.balance,
-                friends: [f IN friendList WHERE f IS NOT NULL]
-            } as userDTO
+                friends: friends
+            }
             """)
     Mono<UserDTO> findByNameWithFriends(String name);
-
 }

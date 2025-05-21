@@ -12,7 +12,6 @@ public interface UserService {
     public Mono<User> updateUser(User user);
     public Mono<Void> deleteUser(String userId);
     public Mono<Void> deleteAllUser();
-
-    public Mono<User> addFriend(String userId, String friendId);
+    public Mono<User> addFriend(String userName, String friendName);
     public Mono<UserDTO> getUserWithFriends(String name);
 }

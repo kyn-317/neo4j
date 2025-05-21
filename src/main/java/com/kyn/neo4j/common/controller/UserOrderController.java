@@ -1,5 +1,6 @@
 package com.kyn.neo4j.common.controller;
 
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.kyn.neo4j.user.dto.UserDTO;
 import com.kyn.neo4j.user.entity.User;
+import com.kyn.neo4j.user.service.Neo4jTemplateService;
 import com.kyn.neo4j.user.service.interfaces.UserService;
 
 import reactor.core.publisher.Mono;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
@@ -21,9 +22,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class UserOrderController {
 
     private final UserService userService;
+    private final Neo4jTemplateService neo4jTemplateService;
 
-    public UserOrderController(UserService userService) {
+    public UserOrderController(UserService userService, Neo4jTemplateService neo4jTemplateService) {
         this.userService = userService;
+        this.neo4jTemplateService = neo4jTemplateService;
     }
 
     @PostMapping("create")
@@ -57,5 +60,9 @@ public class UserOrderController {
     }
     
 
+    @GetMapping("get-user-with-friends-count/{name}")
+    public Mono<UserDTO> getUserWithFriendsCount(@PathVariable String name) {
+        return neo4jTemplateService.findByName(name);
+    }
 }
 
