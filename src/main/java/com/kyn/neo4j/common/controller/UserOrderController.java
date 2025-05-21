@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.kyn.neo4j.order.dto.OrderDTO;
+import com.kyn.neo4j.order.dto.OrderRequest;
+import com.kyn.neo4j.order.service.interfaces.OrderService;
 import com.kyn.neo4j.user.dto.UserDTO;
 import com.kyn.neo4j.user.entity.User;
 import com.kyn.neo4j.user.service.interfaces.UserService;
@@ -21,10 +24,11 @@ import reactor.core.publisher.Mono;
 public class UserOrderController {
 
     private final UserService userService;
+    private final OrderService orderService;
 
-
-    public UserOrderController(UserService userService) {
+    public UserOrderController(UserService userService, OrderService orderService) {
         this.userService = userService;
+        this.orderService = orderService;
     }
 
     @PostMapping("create")
@@ -58,5 +62,14 @@ public class UserOrderController {
     }
     
 
+    @PostMapping("create-order")
+    public Mono<OrderDTO> createOrder(@RequestBody OrderRequest orderRequest) {
+        return orderService.createOrder(orderRequest);
+    }
+
+    @GetMapping("get-order/{orderId}")
+    public Mono<OrderDTO> getOrderById(@PathVariable String orderId) {
+        return orderService.getOrderById(orderId);
+    }
 }
 
